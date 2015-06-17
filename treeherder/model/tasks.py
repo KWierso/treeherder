@@ -130,6 +130,29 @@ def publish_job_action(project, action, job_id, requester):
             requester=requester
         )
 
+@task(name='trigger-all-coalesced')
+def trigger_all_coalesced(project, revision, requester):
+    """
+    Generic task to trigger all jobs that have been coalesced away
+    from this revision.
+
+    :param project str: The name of the project this action was requested for.
+    :param job_id str: The job id the action was requested for.
+    :param requester str: The email address associated with the request.
+    """
+    publisher = pulse_connection.get_publisher()
+    if not publisher:
+        return
+
+    publisher.job_action(
+        version=1,
+        build_system_type=refdata['build_system_type'],
+        project=project,
+        action='trigger-all-coalesced',
+        revision=revision,
+        requester=requester
+    )
+
 
 @task(name='publish-resultset')
 def publish_resultset(project, ids):

@@ -348,6 +348,9 @@ treeherderApp.controller('MainCtrl', [
             $location.search({"repo": repo_name});
         };
 
+        $scope.triggerAllJobsOnThisRevision = function(repo_name, revision) {
+
+        }
 
         $scope.isFilterPanelShowing = false;
         $scope.setFilterPanelShowing = function(tf) {

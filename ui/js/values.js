@@ -150,3 +150,7 @@ treeherder.value("thJobNavSelectors",
                                ".th-view-content .job-btn.btn-purple"
     }
 );
+
+treeherder.value("thKeybindings", [
+    { }
+]);

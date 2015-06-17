@@ -133,6 +133,23 @@ class ResultSetViewSet(viewsets.ViewSet):
         except Exception as ex:
             return Response("Exception: {0}".format(ex), 404)
 
+    @action(permission_classes=[IsAuthenticated])
+    @with_jobs
+    def trigger_coalesced(self, request, project, jm, pk=None):
+        """
+        Trigger all coalesced jobs on this resultset
+        """
+
+        if not pk:  # pragma nocover
+            return Response({"message": "resultset id required"}, status=400)
+
+        try:
+            jm.cancel_all_resultset_jobs(request.user.email, pk)
+            return Response({"message": "triggered all previously coalesced jobs for resultset '{0}'".format(pk)})
+
+        except Exception as ex:
+            return Response("Exception: {0}".format(ex), 404)
+
     @with_jobs
     @oauth_required
     def create(self, request, project, jm):
