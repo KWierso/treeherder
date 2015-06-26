@@ -119,10 +119,12 @@
             <div class="clearfix"></div>
             <li>
                 <span class="revision">
+                    <span class="revision-text">{{revision}}</span>
                     <a href="{{currentRepo.getRevisionHref(revision)}}"
                        title="open revision {{revision}} on {{currentRepo.url}}"
-                       ignore-job-clear-on-click
-                       >{{revision}}</a>
+                       ignore-job-clear-on-click>
+                      <span class="fa fa-external-link"/>
+                    </a>
                     <span title="{{name}}: {{email}}">{{name|initials}}</span>
                     <span title="{{escaped_comment}}">
                         <span class="revision-comment">
