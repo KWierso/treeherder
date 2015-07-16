@@ -4,12 +4,24 @@
 
 import os
 import time
+import requests
 import json
 from datetime import datetime, timedelta
-
 import pytest
+from treeherder.model.models import (RepositoryGroup,
+                                     Repository, RepositoryVersion)
 
-from treeherder.model.models import RepositoryGroup, Repository
+
+@pytest.fixture
+def mock_requests():
+    """this mocks requests to avoid hitting the network
+    when retrieving the hg version file"""
+    mock = Mock()
+    mock.return_value = (
+        '#just comments',
+        'latest version'
+    )
+    requests.get = mock
 
 
 @pytest.fixture
@@ -293,6 +305,79 @@ def test_get_repository_info(refdata, repository_id):
 
     for k, v in expected.items():
         assert info[k] == v
+
+
+def test_get_hg_repository_version(refdata, mock_requests):
+    version = refdata.get_hg_repository_version("https://hg.mozilla.org/mozilla-central")
+
+    refdata.disconnect()
+
+    assert version == 'latest version'
+
+
+def test_update_repo_version_if_old(refdata, old_version_repository, mock_requests):
+    """test repo version is updated if a new one is available"""
+    repo_id, old_version = old_version_repository
+
+    refdata.update_repository_version(repo_id)
+
+    updated_version = refdata.get_repository_version_id(repo_id)
+
+    refdata.disconnect()
+
+    assert old_version != updated_version
+
+
+def test_update_repo_version_unchanged(refdata, latest_version_repository, mock_requests):
+    """Test version is kept and version_timestamp updated if the version is unchanged."""
+
+    time_now = time.time()
+    repo_id, last_version = latest_version_repository
+    refdata.update_repository_version(repo_id)
+
+    updated_version = refdata.get_repository_version_id(repo_id)
+
+    row_data = refdata.dhub.execute(
+        proc='refdata_test.selects.test_repository_version',
+        placeholders=[updated_version],
+        return_type='iter'
+    )
+
+    refdata.disconnect()
+
+    assert row_data.get_column_data('version') == 'latest version'
+    assert row_data.get_column_data('version_timestamp') >= long(time_now)
+
+
+def test_update_repo_version_command(refdata, old_version_repository, initial_data, mock_requests):
+    """Test the django command extension update_repository_version without filters."""
+
+    repo_id, old_version = old_version_repository
+
+    call_command('update_repository_version')
+
+    updated_version = refdata.get_repository_version_id(repo_id)
+
+    refdata.disconnect()
+
+    assert old_version < updated_version
+
+
+def test_update_repo_version_command_with_filters(refdata, old_version_repository, initial_data, mock_requests):
+    """Test the django command extension update_repository_version using filters."""
+
+    repo_id, old_version = old_version_repository
+
+    call_command('update_repository_version',
+                 repo_name='mozilla-central',
+                 group_name='mygroup',
+                 codebase='gecko')
+
+    updated_version = refdata.get_repository_version_id(repo_id)
+
+    refdata.disconnect()
+
+    assert old_version < updated_version
 
 
 @pytest.fixture
