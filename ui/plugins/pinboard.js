@@ -60,7 +60,7 @@ treeherder.controller('PinboardCtrl', [
         };
 
         $scope.save = function() {
-            if ($scope.user.loggedin) {
+            if ($scope.user.loggedin && $scope.hasPinnedJobs()) {
                 if ($scope.enteringBugNumber) {
                     // we should save this for the user, as they likely
                     // just forgot to hit enter.
