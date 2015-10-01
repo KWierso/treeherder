@@ -428,5 +428,26 @@ treeherderApp.controller('MainCtrl', [
         $scope.pinboardCount = thPinboard.count;
         $scope.pinnedJobs = thPinboard.pinnedJobs;
 
+        $scope.fileBug = function(event) {
+            var summary = event.target.nextElementSibling.innerHTML;
+            console.log(summary.split("|"));
+            var filerWindow = $window.open("./intermittent.html");
+            $window.addEventListener("message", filerMessage, false);
+        };
+
+        function filerMessage(event) {
+          console.log(event.data, event.source);
+// FILTER SOURCE HERE
+          switch(event.data) {
+            case "Filer ready":
+              event.source.postMessage(["summary", summary], $window.location.origin);
+              event.source.postMessage(["link", summary], $window.location.origin);
+              event.source.postMessage(["reftestlink", summary], $window.location.origin);
+              break;
+            default:
+              console.log(event.data, event.source);
+              break;
+          }
+        }
     }
 ]);

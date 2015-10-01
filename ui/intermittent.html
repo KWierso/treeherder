@@ -1,0 +1,47 @@
+<html>
+  <head>
+    <title>Intermittent Bug Filer</title>
+    <script>
+      window.addEventListener("message", parentMessage, false);
+
+      function parentMessage(event) {
+console.log(event);
+        if (event.origin !== window.location.origin) {
+          return;
+        }
+        alert(event.data);
+      }
+
+      function establishChannel() {
+        console.log("sending message to " + window.location.origin);
+        window.opener.postMessage("Filer ready", window.location.origin);
+      }
+    </script>
+    <style>
+      #summary {
+        width:650;
+      }
+      #comment {
+        width:650px;
+        height:650px;
+      }
+      form > label, #productFinderButton {
+        float:left;
+      }
+    </style>
+  </head>
+  <body onload="establishChannel()">
+    <form>
+      <button name="productFinderButton" id="productFinderButton" type="button">Find Product</button>
+      <br/><br/>
+
+      <label id="summarylabel" for="summary">Summary:</label>
+      <input id="summary" type="text" placeholder="Intermittent..." />
+      <br/>
+      
+      <label id="commentlabel" for="comment">Comment:</label>
+      <textarea id="comment" type="textarea" placeholder="https://treeherder.mozilla.org/logviewer.html..."></textarea>
+      <br/>
+    </form>
+  </body>
+</html>

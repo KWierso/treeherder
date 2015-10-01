@@ -3,6 +3,7 @@
 
         <li ng-repeat="suggestion in suggestions">
             <div class="job-tabs-content">
+                <button name="fileButton" ng-click="fileBug($event)">File</button>
                 <span>{{::suggestion.search}}</span>
             </div>
             <!--Open recent bugs-->
