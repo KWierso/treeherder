@@ -2,13 +2,13 @@
 
 treeherderApp.controller('MainCtrl', [
     '$scope', '$rootScope', '$routeParams', '$location', 'ThLog',
-    'ThRepositoryModel', 'thPinboard', 'thNotify',
+    'ThRepositoryModel', 'thPinboard', 'thNotify', '$modal',
     'thClassificationTypes', 'thEvents', '$interval', '$window',
     'ThExclusionProfileModel', 'thJobFilters', 'ThResultSetStore',
     'thDefaultRepo', 'thJobNavSelectors',
     function MainController(
         $scope, $rootScope, $routeParams, $location, ThLog,
-        ThRepositoryModel, thPinboard, thNotify,
+        ThRepositoryModel, thPinboard, thNotify, $modal,
         thClassificationTypes, thEvents, $interval, $window,
         ThExclusionProfileModel, thJobFilters, ThResultSetStore,
         thDefaultRepo, thJobNavSelectors) {
@@ -439,5 +439,134 @@ treeherderApp.controller('MainCtrl', [
         $scope.pinboardCount = thPinboard.count;
         $scope.pinnedJobs = thPinboard.pinnedJobs;
 
+        $scope.fileBug = function(event) {
+            var target = event.target;
+            // Click target is sometimes the icon in the button, not the button
+            if(target.tagName.toLowerCase() == "i" && target.className.search("fa-bug") >= 0) {
+                target = target.parentNode;
+            }
+            var summary = target.nextElementSibling.textContent;
+            var modalInstance = $modal.open({
+                templateUrl: 'partials/main/intermittent.html',
+                controller: 'IntermittentFilerCtrl',
+                size: 'lg',
+                resolve: {
+                    summary: function() {
+                        return summary;
+                    },
+                    fullLog: function() {
+                        return $('.raw-log-icon')[0].href;
+                    },
+                    parsedLog: function() {
+                        return $('#logviewer-btn')[0].href;
+                    },
+                    reftest: function() {
+                        return $scope.selectedJob.job_group_name.search("Reftest") >= 0 ?
+                            $('#reftestviewer-btn')[0].href : "";
+                    },
+                    selectedJob: function() {
+                        return $scope.selectedJob;
+                    }
+                }
+            });
+            
+            modalInstance.opened.then(function () {
+                window.setTimeout(function () { modalInstance.initiate(); }, 0);
+            });
+        };
     }
 ]);
+
+treeherderApp.controller('IntermittentFilerCtrl', function($scope, $modalInstance, $http, summary, 
+                                                           fullLog, parsedLog, reftest, selectedJob) {
+    /**
+     *  Pre-fill the form with information/metadata from the failure
+     */
+    $scope.initiate = function() {
+        var parsedSummary = $modalInstance.parseSummary(summary);
+
+        console.log(parsedSummary, fullLog, parsedLog, reftest, selectedJob);
+
+        document.getElementById("modalSummary").value = "Intermittent " + parsedSummary[0].join(" | ");
+
+        document.getElementById("modalParsedLog").nextElementSibling.href = parsedLog;
+        document.getElementById("modalFullLog").nextElementSibling.href = fullLog;
+        document.getElementById("modalReftestLog").nextElementSibling.href = reftest;
+
+        // Only show the reftest viewer link if this is a reftest
+        if(reftest == "") {
+            document.getElementById("modalReftestLogLabel").className = "hidden";
+            document.getElementById("modalReftestLog").removeAttribute("checked");
+        } else {
+            document.getElementById("modalReftestLogLabel").className = "";
+            document.getElementById("modalReftestLog").setAttribute("checked", true);
+        }
+    };
+    
+    $modalInstance.initiate = $scope.initiate;
+
+    $modalInstance.possibleFilename;
+
+    /*
+     *  Remove extraneous junk from the start of the summary line
+     *  and try to find the failing test name from what's left
+     */
+    $modalInstance.parseSummary = function(summary) {
+        var omittedLeads = ["TEST-UNEXPECTED-FAIL", "PROCESS-CRASH"];
+        summary = summary.split(" | ");
+
+        for(var i=0; i < omittedLeads.length; i++) {
+            if(summary[0].search(omittedLeads[i]) >= 0) {
+                summary.shift();
+            }
+        }
+
+        $modalInstance.possibleFilename = summary[0].split("/").pop();
+
+        return [summary, $modalInstance.possibleFilename];
+    };
+
+    /*
+     *  Attempt to find a good product/component for this failure
+     */
+    $scope.findProduct = function() {
+        console.log($modalInstance.possibleFilename);
+    };
+
+    /*
+     *  Same as clicking outside of the modal, but with a nice button-clicking feel...
+     */
+    $scope.cancelFiler = function() {
+        $modalInstance.dismiss('cancel');
+    };
+
+    /*
+     *  Actually send the gathered information to bugzilla.
+     */
+    $scope.submitFiler = function() {
+        var bugstring = "https://bugzilla.mozilla.org/enter_bug.cgi?product=Core";
+        var summarystring = "&short_desc=" + encodeURIComponent(document.getElementById("modalSummary").value);
+
+        var logstrings = "";
+        var logcheckboxes = document.getElementById("modalLogLinkCheckboxes").getElementsByTagName("input");
+
+        for(var i=0;i<logcheckboxes.length;i++) {
+            if(logcheckboxes[i].checked) {
+                logstrings += logcheckboxes[i].nextElementSibling.href + "\n\n";
+            }
+        }
+
+        var commentstring = "&comment=" + encodeURIComponent(logstrings + document.getElementById("modalComment").value);
+
+        var keywordsstring = "&keywords=" + encodeURIComponent(document.getElementById("modalKeywords").value);
+        var ccstring = "&cc=" + encodeURIComponent(document.getElementById("modalCc").value);
+
+        var dependsstring = "&dependson=" + encodeURIComponent(document.getElementById("modalDepends").value);
+        var blocksstring = "&blocked=" + encodeURIComponent(document.getElementById("modalBlocks").value);
+
+        // We'll submit with credentials eventually, but this is easier to debug
+alert("This defaults to the 'Core' product for now, careful if you actually use this thing for real.");
+        window.open(bugstring + summarystring + commentstring + keywordsstring + ccstring + dependsstring + blocksstring);
+    };
+});
+
