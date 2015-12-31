@@ -313,8 +313,13 @@ PARSER_MAX_STEP_ERROR_LINES = 100
 PARSER_MAX_SUMMARY_LINES = 200
 FAILURE_LINES_CUTOFF = 35
 
+<<<<<<< HEAD
 BZ_API_URL = "https://bugzilla.mozilla.org"
 BZ_API_KEY = env("BUGZILLA_API_KEY", default="")
+=======
+BZ_API_URL = env("BUGZILLA_API_URL", default="https://bugzilla.mozilla.org")
+BZ_API_KEY = env("BUGZILLA_API_KEY", default=None)
+>>>>>>> ce4df31... Bug 1117583 - Add an API endpoint that creates a new bug in Bugzilla.
 
 ORANGEFACTOR_SUBMISSION_URL = "https://brasstacks.mozilla.com/orangefactor/api/saveclassification"
 ORANGEFACTOR_HAWK_ID = "treeherder"
