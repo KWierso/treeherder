@@ -5,10 +5,6 @@
     padding: 20px;
 }
 
-#modalForm #modalReftestLogLabel {
-    /*display:none;*/
-}
-
 #modalSummarylabel {
   margin-top: -5px;
 }
@@ -37,29 +33,12 @@
     color:inherit;
 }
 
-#modalLogLinkCheckboxes label.hidden {
-    display:none;
-}
-
 #modalForm > div:after {
     content: ".";
     display: block;
     height: 0;
     clear: both;
     visibility: hidden;
-}
-
-#modalExtrasDiv {
-  padding:5px;
-  width:90%;
-}
-
-#modalExtrasLeftDiv {
-    float:left;
-}
-
-#modalExtrasRightDiv {
-    float:right;
 }
 
 #modalBottomDiv {

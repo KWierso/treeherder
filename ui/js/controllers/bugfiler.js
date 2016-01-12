@@ -1,119 +1,30 @@
 "use strict";
 
 treeherder.controller('BugFilerCtrl', [
-    '$scope', '$rootScope', '$modalInstance', '$http', 'summary', 'thPinboard', 'thEvents',
-    'fullLog', 'parsedLog', 'reftest', 'selectedJob', 'allFailures', 'thNotify', 'ThLog',
+    '$scope', '$rootScope', '$modalInstance', '$http', 'summary', 'thBugzillaProductObject',
+    'thPinboard', 'thEvents', 'fullLog', 'parsedLog', 'reftest', 'selectedJob', 'allFailures',
+    'thNotify', 'ThLog',
     function BugFilerCtrl(
-        $scope, $rootScope, $modalInstance, $http, summary, thPinboard, thEvents,
-        fullLog, parsedLog, reftest, selectedJob, allFailures, thNotify, ThLog) {
+        $scope, $rootScope, $modalInstance, $http, summary, thBugzillaProductObject,
+        thPinboard, thEvents, fullLog, parsedLog, reftest, selectedJob, allFailures,
+        thNotify, ThLog) {
 
         var $log = new ThLog("BugFilerCtrl");
 
-        $modalInstance.productObject = {
-            "accessible":
-                ["Core :: Disability Access APIs","Firefox :: Disability Access"],
-            "addon-sdk":
-                ["Add-on SDK :: General"],
-            "b2g":
-                ["Firefox OS :: General"],
-            "browser":
-                ["Firefox :: General"],
-            "build":
-                ["Core :: Build Config"],
-            "caps":
-                ["Core :: Security: CAPS"],
-            "chrome":
-                ["???"],
-            "config":
-                ["Firefox :: Build Config","Core :: Build Config","Firefox for Android :: Build Config & IDE Support"],
-            "db":
-                ["Toolkit :: Storage"],
-            "devtools":
-                ["Firefox :: Developer Tools"],
-            "docshell":
-                ["Core :: Document Navigation"],
-            "dom":
-                ["Core :: DOM","???"],
-            "editor":
-                ["Core :: Editor"],
-            "embedding":
-                ["Core :: Embedding: APIs"],
-            "extensions":
-                ["???"],
-            "gfx":
-                ["Core :: Graphics","Core :: Graphics: Layers","Core :: Graphics: Text"],
-            "gradle":
-                ["Core :: Build Config"],
-            "hal":
-                ["Core :: Hardware Abstraction Layer (HAL)"],
-            "image":
-                ["Core :: ImageLib"],
-            "intl":
-                ["Core :: Internationalization"],
-            "ipc":
-                ["Core :: IPC","Core :: DOM: Content Processes"],
-            "js":
-                ["Core :: Javascript Engine","Core :: Javascript Engine: Jit","Core :: Javascript Engine: GC","Core :: Javascript Engine: Internationalization API","Core :: Javascript Engine: Standard Library"],
-            "layout":
-                ["Core :: Layout","???"],
-            "media":
-                ["Core :: Audio/Video","???"],
-            "memory":
-                ["Core :: Memory Allocator"],
-            "mfbt":
-                ["Core :: MFBT"],
-            "mobile":
-                ["Firefox for Android :: General","???"],
-            "modules":
-                ["???"],
-            "mozglue":
-                ["Core :: mozglue"],
-            "netwerk":
-                ["Core :: Networking"],
-            "nsprpub":
-                ["NSPR :: NSPR"],
-            "other-licenses":
-                ["???"],
-            "parser":
-                ["Core :: HTML: Parser"],
-            "probes":
-                ["???"],
-            "python":
-                ["???"],
-            "rdf":
-                ["Core :: RDF"],
-            "security":
-                ["Core :: Security","Firefox :: Security"],
-            "services":
-                ["Core :: Web Services"],
-            "startupcache":
-                ["Core :: XPCOM"],
-            "storage":
-                ["Toolkit :: Storage"],
-            "testing":
-                ["Testing :: General"],
-            "toolkit":
-                ["Toolkit :: General","???"],
-            "tools":
-                ["???"],
-            "uriloader":
-                ["???"],
-            "view":
-                ["Core :: Layout"],
-            "webapprt":
-                ["Firefox :: Webapp Runtime"],
-            "widget":
-                ["Core :: Widget"],
-            "xpcom":
-                ["Core :: XPCOM"],
-            "xpfe":
-                ["Core :: XUL"],
-            "xulrunner":
-                ["Toolkit :: XULRunner"]
+        /**
+         *  'enter' from the product search input should initiate the search
+         */
+        $scope.productSearch = function(ev) {
+            if (ev.keyCode === 13) {
+                $scope.findProduct();
+            }
         };
 
-        $modalInstance.defaultproductObject = {
-            // XXX
+        /*
+         **
+         */
+        $scope.isReftest = function() {
+            return reftest !== "";
         };
 
         /**
@@ -122,23 +33,15 @@ treeherder.controller('BugFilerCtrl', [
         $scope.initiate = function() {
             $modalInstance.parsedSummary = $modalInstance.parseSummary(summary);
 
-            console.log($modalInstance.parsedSummary, fullLog, parsedLog, reftest, selectedJob, allFailures);
-
-            // Allow 'enter' from the product finder input box to trigger the search
-            document.getElementById("modalProductFinderSearch").addEventListener("keypress", function(e) {
-                if(e.keyCode === 13) {
-                    $scope.findProduct();
-                }
-            });
-
-            document.getElementById("modalSummary").value = "Intermittent " + $modalInstance.parsedSummary[0].join(" | ");
+            $scope.modalSummary = "Intermittent " + $modalInstance.parsedSummary[0].join(" | ");
 
             document.getElementById("modalParsedLog").nextElementSibling.href = parsedLog;
             document.getElementById("modalFullLog").nextElementSibling.href = fullLog;
-            document.getElementById("modalReftestLog").nextElementSibling.href = reftest;
+            if ($scope.isReftest()) {
+                document.getElementById("modalReftestLog").nextElementSibling.href = reftest;
+            }
 
             for(var i=0;i<allFailures.length;i++) {
-                console.log(allFailures[i]);
                 var omittedLeads = ["TEST-UNEXPECTED-FAIL", "PROCESS-CRASH", "TEST-UNEXPECTED-ERROR", "TEST-UNEXPECTED-TIMEOUT"];
                 for(var j=0; j < omittedLeads.length; j++) {
                     if(allFailures[i][0].search(omittedLeads[j]) >= 0) {
@@ -148,15 +51,6 @@ treeherder.controller('BugFilerCtrl', [
                 var thisFailure = document.createElement("div");
                 thisFailure.textContent = allFailures[i].join(" | ");
                 document.getElementById("modalFailureList").appendChild(thisFailure);
-            }
-
-            // Only show the reftest viewer link if this is a reftest
-            if(reftest == "") {
-                document.getElementById("modalReftestLogLabel").className = "hidden";
-                document.getElementById("modalReftestLog").removeAttribute("checked");
-            } else {
-                document.getElementById("modalReftestLogLabel").className = "";
-                document.getElementById("modalReftestLog").setAttribute("checked", true);
             }
 
             $scope.findProduct();
@@ -215,8 +109,8 @@ treeherder.controller('BugFilerCtrl', [
 
             // Look up the product via the root of the failure's file path
             // XXX THIS NEEDS TO BE MUCH MORE ROBUST
-            if($modalInstance.productObject[failurePathRoot]) {
-                suggestedProducts.push($modalInstance.productObject[failurePathRoot][0]);
+            if(thBugzillaProductObject[failurePathRoot]) {
+                suggestedProducts.push(thBugzillaProductObject[failurePathRoot][0]);
             }
 
             createProductElements();
@@ -226,7 +120,6 @@ treeherder.controller('BugFilerCtrl', [
 
             if(productSearch) {
                 $.get("https://bugzilla.mozilla.org/rest/prod_comp_search/" + productSearch + "?limit=5", function(data) {
-                    console.log(data.products);
                     for(var i = 0; i < data.products.length;i++) {
                         if(data.products[i].product && data.products[i].component) {
                             suggestedProducts.push(data.products[i].product + " :: " + data.products[i].component);
@@ -261,8 +154,7 @@ treeherder.controller('BugFilerCtrl', [
          */
         $scope.submitFiler = function() {
             var bugzillaRoot = "https://bugzilla-dev.allizom.org/"; // (prod is "https://bugzilla.mozilla.org/");
-            var summarystring = document.getElementById("modalSummary").value;
-
+            var summarystring = $scope.modalSummary;
             var productString = "";
             var componentString = "";
             var isProductSelected = false;
@@ -304,7 +196,6 @@ treeherder.controller('BugFilerCtrl', [
             // Only request the versions because some products take quite a long time to fetch the full object
             $.ajax(bugzillaRoot + "rest/product/" + productString + "?include_fields=versions").done(function(productJSON) {
                 var productObject = productJSON.products[0];
-                console.log(productObject.versions);
                 $http({
                     //url: bugzillaRoot + "rest/bug?api_key=qF8lX6AyGjcZcmSV4tZTmy2F2PbBycQdB9lsp8cB",
                     url: "api/bugzilla/create_bug/",
@@ -313,15 +204,12 @@ treeherder.controller('BugFilerCtrl', [
                         "product": productString,
                         "component": componentString,
                         "summary": summarystring,
-                        "keywords": "intermittent-failure",//var keywordsstring = "&keywords=" + encodeURIComponent(document.getElementById("modalKeywords").value);
-                      //  "dependson": [""],//var dependsstring = "&dependson=" + encodeURIComponent(document.getElementById("modalDepends").value);
-                      //  "blocks": [""],//var blocksstring = "&blocked=" + encodeURIComponent(document.getElementById("modalBlocks").value);
+                        "keywords": "intermittent-failure",
                         // XXX This takes the last version returned from the product query, probably should be smarter about this in the future...
                         "version": productObject.versions[productObject.versions.length-1].name,
                         "description": logstrings + document.getElementById("modalComment").value,
                         "comment_tags": "treeherder",
-                      //XXX var ccstring = "&cc=" + encodeURIComponent(document.getElementById("modalCc").value);
-                      //XXX NEEDINFO FLAG
+                        // XXX Still should implement ccstring, dependson, blocks, and needinfo fields
                     }
                 }).then(function successCallback(json) {
                     if(json.data.failure) {
@@ -330,12 +218,9 @@ treeherder.controller('BugFilerCtrl', [
                             errorString += json.data.failure[i];
                         }
                         errorString = JSON.parse(errorString);
-                        console.log("FAILURE", errorString);
                         thNotify.send("Bugzilla error: " + errorString.message, "danger", true);
                         $(':input','#modalForm').attr("disabled",false);
                     } else {
-                        console.log(json.data);
-
                         // Auto-classify this failure now that the bug has been filed and we have a bug number
                         thPinboard.pinJob($rootScope.selectedJob);
                         thPinboard.addBug({id:json.data.success});
@@ -347,8 +232,7 @@ treeherder.controller('BugFilerCtrl', [
                         $scope.cancelFiler();
                     }
                 }, function errorCallback(response) {
-                    console.log("HI",response);
-                    $log.debug("sup");
+                    $log.debug(response);
                 });
             });
         };
