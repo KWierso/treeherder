@@ -35,12 +35,13 @@ treeherder.controller('BugFilerCtrl', [
 
             $scope.modalSummary = "Intermittent " + $modalInstance.parsedSummary[0].join(" | ");
 
-            document.getElementById("modalParsedLog").nextElementSibling.href = parsedLog;
-            document.getElementById("modalFullLog").nextElementSibling.href = fullLog;
+            $("#modalParsedLog").next().attr("href", parsedLog);
+            $("#modalFullLog").next().attr("href", fullLog);
             if ($scope.isReftest()) {
-                document.getElementById("modalReftestLog").nextElementSibling.href = reftest;
+                $("#modalReftestLog").next().attr("href", reftest);
             }
 
+            var thisFailure = "";
             for(var i=0;i<allFailures.length;i++) {
                 var omittedLeads = ["TEST-UNEXPECTED-FAIL", "PROCESS-CRASH", "TEST-UNEXPECTED-ERROR", "TEST-UNEXPECTED-TIMEOUT"];
                 for(var j=0; j < omittedLeads.length; j++) {
@@ -48,10 +49,13 @@ treeherder.controller('BugFilerCtrl', [
                         allFailures[i].shift();
                     }
                 }
-                var thisFailure = document.createElement("div");
-                thisFailure.textContent = allFailures[i].join(" | ");
-                document.getElementById("modalFailureList").appendChild(thisFailure);
+                if(i != 0) {
+                    thisFailure += "\n";
+                }
+                thisFailure += allFailures[i].join(" | ");
+                $("#modalFailureList");
             }
+            $("#modalFailureList").val(thisFailure);
 
             $scope.findProduct();
         };
@@ -116,7 +120,7 @@ treeherder.controller('BugFilerCtrl', [
             createProductElements();
 
             // Look up product suggestions via Bugzilla's api
-            var productSearch = document.getElementById("modalProductFinderSearch").value;
+            var productSearch = $("#modalProductFinderSearch").val();
 
             if(productSearch) {
                 $.get("https://bugzilla.mozilla.org/rest/prod_comp_search/" + productSearch + "?limit=5", function(data) {
@@ -161,7 +165,7 @@ treeherder.controller('BugFilerCtrl', [
 
             $(':input','#modalForm').attr("disabled",true);
 
-            var productRadios = document.getElementById("modalForm").elements["productGroup"];
+            var productRadios = $("#modalForm input[name='productGroup'");
             if(productRadios && productRadios.length) {
                 for(var i=0, len=productRadios.length; i<len; i++) {
                     if(productRadios[i].checked) {
