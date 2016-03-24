@@ -10,7 +10,7 @@ from treeherder.etl.common import make_request
 
 
 class BugzillaViewSet(viewsets.ViewSet):
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    # permission_classes = (IsAuthenticatedOrReadOnly,)
 
     @list_route(methods=['post'])
     def create_bug(self, request):
@@ -38,6 +38,6 @@ class BugzillaViewSet(viewsets.ViewSet):
             response = make_request(url, method='POST', headers=headers, json=data)
         except requests.exceptions.HTTPError as e:
             response = e.response
-            return Response({"failure": response.json(), "headers": headers, "settings": settings.BUGZILLA_API_KEY}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"failure": response.json(), "headers": headers, "settings": settings.BZ_API_KEY, "url": settings.BZ_API_URL}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({"success": response.json()["id"]})
