@@ -459,7 +459,7 @@ JOB_TYPE_BUILDERNAME = {
     'talos': [re.compile(r'.+ talos .+')],
     'repack': [
         re.compile(r'.+ l10n .+'),
-        re.compile(r'.+_l10n_.+'),
+        re.compile(r'.+_l10n_repack'),
     ],
 }
 
@@ -641,6 +641,7 @@ JOB_NAME_BUILDERNAME = [
     {"regex": re.compile(r'valgrind'), "name": "Valgrind Build"},
     {"regex": re.compile(r'dxr'), "name": "DXR Index Build"},
     {"regex": re.compile(r'(build|dep|periodic)$'), "name": "Build"},
+    {"regex": re.compile(r'_l10n_'), "name": "L10n Repack"},
 ]
 
 # map test names to group names as "<testname>": "<groupname>"
@@ -702,6 +703,7 @@ GROUP_NAMES = {
     "Unknown B2G Device Image Nightly": "Unknown Device Image",
     "Unknown B2G Device Image Nightly (Engineering)": "Unknown Device Image",
     "L10n Nightly": "L10n Repack",
+    "L10n Repack": "L10n Repack",
     "Android x86 Test Set": "Android x86 Test Combos",
     "Mochitest": "Mochitest",
     "Mochitest Push": "Mochitest",
