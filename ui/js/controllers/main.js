@@ -4,13 +4,13 @@ treeherderApp.controller('MainCtrl', [
     '$scope', '$rootScope', '$routeParams', '$location', 'ThLog',
     'ThRepositoryModel', 'thPinboard', 'thTabs',
     'thClassificationTypes', 'thEvents', '$interval', '$window',
-    'ThExclusionProfileModel', 'thJobFilters', 'ThResultSetStore',
+    'ThExclusionProfileModel', 'thJobFilters', 'ThResultSetStore', '$uibModal',
     'thDefaultRepo', 'thJobNavSelectors', 'thTitleSuffixLimit', 'ThResultSetModel',
     function MainController(
         $scope, $rootScope, $routeParams, $location, ThLog,
         ThRepositoryModel, thPinboard, thTabs,
         thClassificationTypes, thEvents, $interval, $window,
-        ThExclusionProfileModel, thJobFilters, ThResultSetStore,
+        ThExclusionProfileModel, thJobFilters, ThResultSetStore, $uibModal,
         thDefaultRepo, thJobNavSelectors, thTitleSuffixLimit, ThResultSetModel) {
 
         var $log = new ThLog("MainCtrl");
@@ -20,7 +20,20 @@ treeherderApp.controller('MainCtrl', [
 
         thClassificationTypes.load();
 
+$scope.taskclusterLoginWindow;
+$window.addEventListener("message", receiveMessage, false);
+
+var receiveMessage = function(event) {
+    console.log(event);
+}
+
         $rootScope.getWindowTitle = function() {
+// Only testing this here for now since it frequently gets called
+if($window.parent && $window.parent !== $window) {
+  console.log($window.parent);
+  console.log($window.parent === $window.top);
+  console.log($location.search());
+}
             var ufc = $scope.getUnclassifiedFailureCount($rootScope.repoName);
             var params = $location.search();
 
@@ -556,6 +569,31 @@ treeherderApp.controller('MainCtrl', [
                 $rootScope.$emit(thEvents.initSheriffPanel);
             }
             $scope.isSheriffPanelShowing = tf;
+        };
+
+        $scope.taskclusterLogin = function() {
+            //$scope.taskclusterLoginWindow = $window.open("https://login.taskcluster.net/?description=Treeherder&target=" + $location.absUrl());
+            //$scope.taskclusterLoginWindow = $window.open("https://treeherder.mozilla.org");
+            //$scope.taskclusterLoginWindow.postMessage("hello", "*");
+            var modalInstance = $uibModal.open({
+                templateUrl: 'partials/main/tclogin.html',
+                //controller: 'LoginCtrl',
+                size: 'lg',
+                resolve: {
+
+                }
+            });
+
+            modalInstance.opened.then(function () {
+                window.setTimeout(function () { 
+                    var port = $location.port() !== 80 ? ":" + $location.port() : "";
+                    console.log(port);
+                    var target = $location.protocol() + "://" + $location.host() + port + "/#/login";
+                    
+                    console.log(target);
+                    $window.open("https://login.taskcluster.net/?description=Treeherder&target=" + target, "th-tc-login-frame") 
+                }, 0);
+            });
         };
 
         $scope.pinboardCount = thPinboard.count;

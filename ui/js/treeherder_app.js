@@ -33,5 +33,8 @@ treeherderApp.config(function($compileProvider, $routeProvider, $httpProvider, $
             templateUrl: 'partials/main/jobs.html',
             reloadOnSearch: false
         }).
+        when('/login', {
+            controller: 'LoginCtrl'
+        }).
         otherwise({redirectTo: '/jobs'});
 });
