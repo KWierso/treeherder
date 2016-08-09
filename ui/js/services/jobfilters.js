@@ -132,6 +132,10 @@ treeherder.factory('thJobFilters', [
             if (!_.isEqual(cachedFilterParams, newFilterParams)) {
                 cachedFilterParams = newFilterParams;
                 _refreshFilterCaches();
+
+                // Filters have changed, save the new values in localstorage for use elsewhere
+                localStorage.setItem($rootScope.currentRepo.name, JSON.stringify(cachedFilterParams["filter-tier"]));
+
                 $rootScope.$emit(thEvents.globalFilterChanged);
             }
 

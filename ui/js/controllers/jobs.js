@@ -33,10 +33,32 @@ treeherderApp.controller('JobsCtrl', [
                 });
         };
 
+        // If you're here, if should only be because you've loaded treeherder
+        // without any filter parameters, so lets try to restore your previous
+        // filter preferences from localstorage
+        $scope.fetchAndUsePrefs = function() {
+            try {
+                var tiers = localStorage.getItem($rootScope.repoName);
+                tiers = JSON.parse(tiers);
+                _.forEach(tiers, function(tier) {
+                    // Add each tier in tiers as a 'filter-tier' URL value
+                    // https://github.com/mozilla/treeherder/blob/f1b07741aad791e6ed603d150d84ace171599ba9/ui/js/services/jobfilters.js#L337 ?
+                });
+            } catch(e) {
+              // If something is not stored right in localstorage, 
+              // errors parsing the stored info could break the entire page.
+              // Lets just eat the errors, this function isn't really important
+              console.log(e);
+            }
+        };
+
         // set to the default repo if one not specified
         if ($routeParams.hasOwnProperty("repo") &&
             $routeParams.repo !== "") {
             $rootScope.repoName = $routeParams.repo;
+            if(/*DO SOMETHING HERE TO CHECK IF FILTER-TIER IS NOT ALREADY BEING USED*/ true) {
+                $scope.fetchAndUsePrefs();
+            }
         } else {
             $rootScope.repoName = thDefaultRepo;
             $location.search("repo", $rootScope.repoName);
