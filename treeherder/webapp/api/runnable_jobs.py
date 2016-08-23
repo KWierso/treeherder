@@ -40,13 +40,23 @@ class RunnableJobsViewSet(viewsets.ViewSet):
         options_by_hash = models.OptionCollection.objects.all().select_related(
             'option').values_list('option__name', 'option_collection_hash')
 
-        runnable_jobs = models.RunnableJob.objects.filter(
+        runnable_jobs2 = models.RunnableJob.objects.filter(
             repository=repository
-        ).select_related('build_platform', 'machine_platform',
+        )
+        runnable_jobs = runnable_jobs2.select_related('build_platform', 'machine_platform',
                          'job_type', 'job_type__job_group')
 
         ret = []
-
+        print runnable_jobs2
+        print "HELLO"
+        print "HELLO"
+        print "HELLO"
+        print "HELLO"
+        print "HELLO"
+        print "HELLO"
+        print runnable_jobs
+        return Response("HELLO")
+        return Response(runnable_jobs2)
         # Adding buildbot jobs
         for datum in runnable_jobs:
             options = ' '.join(option_name for (option_name, col_hash) in options_by_hash
@@ -81,7 +91,8 @@ class RunnableJobsViewSet(viewsets.ViewSet):
             task_metadata = node['task']['metadata']
             treeherder_options = node['task']['extra']['treeherder']
             build_platform = treeherder_options.get('machine', {}).get('platform', '')
-
+            print task_metadata
+            print treeherder_options
             # Not all tasks have a group name
             job_group_name = treeherder_options.get('groupName', '')
 

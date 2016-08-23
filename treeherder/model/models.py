@@ -1129,6 +1129,7 @@ class RunnableJob(models.Model):
     build_system_type = models.CharField(max_length=25)
     repository = models.ForeignKey(Repository)
     last_touched = models.DateTimeField(auto_now=True)
+    signature = models.CharField(max_length=25)
 
     class Meta:
         db_table = 'runnable_job'

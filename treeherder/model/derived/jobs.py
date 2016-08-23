@@ -1074,6 +1074,7 @@ into chunks of chunk_size size. Returns the number of result sets deleted"""
                     retry_job_guids,
                     async_error_summary_list
                 )
+                print "BANANABANANABANANA"
                 reference_data_signatures.add(reference_data_signature)
                 for coalesced_guid in coalesced:
                     coalesced_job_guid_placeholders.append(
