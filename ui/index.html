@@ -39,6 +39,10 @@
                             src="'partials/main/thGlobalTopNavPanel.html'">
                 </ng-include>
             </div>
+            <div uib-alert type="info" style="flex: none;" ng-show="serverChangedDelayed" ng-cloak>
+                <i class="fa fa-info-circle" aria-hidden="true"></i>
+                Treeherder has updated, to pick up the changes you can reload the page
+            </div>
             <div id="th-global-content" class="th-global-content"
                  ng-click="clearJobOnClick($event)">
                 <span class="th-view-content" ng-cloak>
