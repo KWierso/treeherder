@@ -625,6 +625,16 @@ treeherderApp.controller('MainCtrl', [
         $scope.pinnedJobs = thPinboard.pinnedJobs;
         $scope.jobFilters = thJobFilters;
 
+        $scope.commRepo = function(repo) {
+            console.log(repo.name);
+            return repo.name.search("comm") >= 0;
+        }
+
+        $scope.notCommRepo = function(repo) {
+            console.log(repo.name);
+            return repo.name.search("comm") < 0;
+        }
+
         $scope.isShowDuplicateJobs = function() {
             return $location.search().duplicate_jobs === 'visible';
         };

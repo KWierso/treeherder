@@ -42,11 +42,16 @@
             <span class="fa fa-angle-down lightgray"></span>
           </button>
           <ul class="dropdown-menu checkbox-dropdown-menu"
-              role="menu" aria-labelledby="repoLabel">
+              role="menu" aria-labelledby="repoLabel" style="width:500px">
             <span ng-repeat="(group_order, group) in groupedRepos()">
               <li role="presentation" class="divider" ng-hide="$first"></li>
               <li role="presentation" class="dropdown-header">{{::group.name}}</li>
-              <th-repo-menu-item ng-repeat="repo in group.repos | orderBy : 'name'" ></th-repo-menu-item>
+              <th-repo-menu-item ng-repeat="repo in group.repos | filter:notCommRepo | orderBy : 'name'" ></th-repo-menu-item>
+            </span>
+            <span ng-repeat="(group_order, group) in groupedRepos()">
+              <li role="presentation" class="divider" ng-hide="$first"></li>
+              <li role="presentation" class="dropdown-header">{{::group.name}}</li>
+              <th-repo-menu-item ng-repeat="repo in group.repos | filter:commRepo | orderBy : 'name'" ></th-repo-menu-item>
             </span>
           </ul>
         </span>
