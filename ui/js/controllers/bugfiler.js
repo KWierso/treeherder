@@ -94,7 +94,7 @@ treeherder.controller('BugFilerCtrl', [
                 }
             }
 
-            $uibModalInstance.possibleFilename = summary[0].split("==")[0].split("/").pop().trim();
+            $uibModalInstance.possibleFilename = summary[0].split("==")[0].split("/").pop().trim().split(" ")[0];
 
             return [summary, $uibModalInstance.possibleFilename];
         };
@@ -164,17 +164,61 @@ treeherder.controller('BugFilerCtrl', [
 
                 // Search mercurial's moz.build metadata to find products/components
                 $scope.searching = "Mercurial";
-                $http.get("https://hg.mozilla.org/mozilla-central/json-mozbuildinfo?p=" + failurePath).then(function(request) {
-                    if (request.data.aggregate && request.data.aggregate.recommended_bug_component) {
-                        var suggested = request.data.aggregate.recommended_bug_component;
+                $http.get("https://hg.mozilla.org/mozilla-central/json-mozbuildinfo?p=" + failurePath).then(function(firstRequest) {
+                    if (firstRequest.data.aggregate && firstRequest.data.aggregate.recommended_bug_component) {
+                        var suggested = firstRequest.data.aggregate.recommended_bug_component;
                         $scope.suggestedProducts.push(suggested[0] + " :: " + suggested[1]);
                     }
 
                     $scope.searching = false;
 
+                    // Make an attempt to find the file path via a dxr file search
+                    if ($scope.suggestedProducts.length === 0) {
+                        $scope.searching = "DXR & Mercurial";
+                        var dxrlink = "https://dxr.mozilla.org/mozilla-central/search?q=file:" + $uibModalInstance.possibleFilename + "&redirect=false";
+                        $http.get(dxrlink, {"headers": {
+                            "Accept": "application/json"
+                        }}).then(function(secondRequest) {
+                            var results = secondRequest.results;
+                            for (var i = 0; i < results.length; i++) {
+                                console.log(results[i].path);
+                                $scope.searching = "DXR & Mercurial";
+                                $http.get("https://hg.mozilla.org/mozilla-central/json-mozbuildinfo?p=" + results[i].path).then(function(thirdRequest) {
+                                    if (thirdRequest.data.aggregate && thirdRequest.data.aggregate.recommended_bug_component) {
+                                        var suggested = thirdRequest.data.aggregate.recommended_bug_component;
+                                        $scope.suggestedProducts.push(suggested[0] + " :: " + suggested[1]);
+                                    }
+                                });
+                            }
+                            $scope.searching = false;
+                        }, function(secondRequest) {
+                            console.log(secondRequest);
+                            var results = [
+                                {"path": "testing/firefox-ui/tests/functional/security/test_safe_browsing_initial_download.py"},
+                                {"path": "browser/base/content/test/newtab/browser_newtab_bug722273.js"},
+                                {"path": "dom/base/test/browser_bug1303838.js"},
+                                {"path": "dom/security/test/csp/test_upgrade_insecure.html"},
+                                {"path": "browser/base/content/test/tabs/browser_tabCloseProbes.js"},
+                                {"path": "browser/base/content/test/tabs/browser_tabCloseProbes.js"}
+                            ];
+                            for (var i = 0; i < results.length; i++) {
+                                console.log(results[i].path);
+                                $scope.searching = "DXR & Mercurial";
+                                $http.get("https://hg.mozilla.org/mozilla-central/json-mozbuildinfo?p=" + results[i].path).then(function(thirdRequest) {
+                                    if (thirdRequest.data.aggregate && thirdRequest.data.aggregate.recommended_bug_component) {
+                                        var suggested = thirdRequest.data.aggregate.recommended_bug_component;
+                                        $scope.suggestedProducts.push(suggested[0] + " :: " + suggested[1]);
+                                        $scope.selection.selectedProduct = $scope.suggestedProducts[0];
+                                    }
+                                    $scope.searching = false;
+                                });
+                            }
+                        });
+                    }
+
+                    // Some job types are special, lets explicitly handle them.
                     if ($scope.suggestedProducts.length === 0) {
                         var jg = selectedJob.job_group_name.toLowerCase();
-                        // Some job types are special, lets explicitly handle them.
                         if (jg.includes("web platform")) {
                             $scope.suggestedProducts.push("Testing :: web-platform-tests");
                         }
