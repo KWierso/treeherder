@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html ng-controller="FailureViewerCtrl" ng-init="init()" ng-app="failureviewer" ng-strict-di>
+<head>
+<meta charset="utf-8">
+<title>Failure Viewer</title>
+<link id="favicon" type="image/png" rel="shortcut icon" href="img/tree_open.png">
+</head>
+<body>
+<!-- Failureviewer navbar -->
+<nav class="navbar navbar-default" role="navigation">
+<div class="container-fluid">
+<ul class="nav navbar-nav">
+<!-- Logo menu button -->
+<li>
+<span class="dropdown">
+<button id="fv-logo" title="Treeherder services" role="button" data-toggle="dropdown">Failure Viewer
+<span class="fa fa-angle-down"></span>
+</button>
+<ul class="dropdown-menu" role="menu" aria-labelledby="fv-logo">
+<li><a href="/">Treeherder</a></li>
+<li><a href="perf.html">Perfherder</a></li>
+</ul>
+</span>
+</li>
+<li class="navbar-text">Classified Failure Error Lines</li>
+<li class="navbar-text" ng-if="classification.bug_number">
+<a href="{{ getBugUrl(classification.bug_number) }}">Bug {{ ::classification.bug_number }}</a>
+</li>
+<li class="navbar-text" ng-if="!classification.bug_number">[No Associated Bug]</li>
+</ul>
+</div>
+</nav>
+<!-- Failure lines table -->
+<div class="failure-line-list" ng-if="!isLoading">
+<table class="table table-condensed">
+<tr ng-repeat="line in cfList">
+<td>
+<div ng-if="line.test"><label>Test:</label>{{line.test}}</div>
+<div ng-if="line.subtest"><label>Subtest:</label>{{line.subtest}}</div>
+<div><label>Status:</label>Expected: <strong>{{line.expected}}</strong> Actual: <strong>{{line.status}}</strong></div>
+<div ng-if="line.message" ng-init="messageExpanded=false" class="failure-line-message">
+<span class="failure-line-message-toggle fa fa-fw fa-lg" ng-class="{'fa-caret-down': messageExpanded, 'fa-caret-right': !messageExpanded}" ng-click="messageExpanded = !messageExpanded"></span>
+<span ng-if="!messageExpanded" class="failure-line-message-collapsed">{{ line.message }}</span>
+<span ng-if="messageExpanded" class="failure-line-message-expanded">{{ line.message }}</span>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div ng-if="isLoading">
+<div class="failure-line-loading">Loading...
+<span class="fa fa-spinner fa-pulse"></span>
+</div>
+</div>
+<th-notification-box></th-notification-box>
+<script type="text/javascript" src="./manifest.d41d8cd98f00b204e980.bundle.js"></script><script type="text/javascript" src="./vendor.bba5b7b37606e532a173.bundle.js"></script><script type="text/javascript" src="./failureviewer.eb4e456ef1228ec14346.bundle.js"></script></body>
+</html>
