@@ -105,7 +105,7 @@ treeherder.controller('BugsPluginCtrl', [
             }
 
             for (var i=0; i<$scope.suggestions.length; i++) {
-                allFailures.push($scope.suggestions[i].search.split(" | "));
+                allFailures.push($scope.suggestions[i].search);
             }
 
             var modalInstance = $uibModal.open({

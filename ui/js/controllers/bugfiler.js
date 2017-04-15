@@ -36,6 +36,36 @@ treeherder.controller('BugFilerCtrl', [
             $scope.reftest = reftest;
         }
 
+        var cleanLine = function(line) {
+            // Strip out some extra stuff at the start of some failure paths
+            var re = /file:\/\/\/.*?\/build\/tests\/reftest\/tests\//gi;
+            line = line.replace(re, "");
+            re = /\/home\/worker\/workspace\/build\/src\//gi;
+            line = line.replace(re, "");
+            re = /chrome:\/\/mochitests\/content\/a11y\//gi;
+            line = line.replace(re, "");
+            re = /\/home\/worker\/checkouts\/gecko\//gi;
+            line = line.replace(re, "");
+            re = /http:\/\/([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+):([0-9]+)\/tests\//gi;
+            line = line.replace(re, "");
+            re = /jetpack-package\//gi;
+            line = line.replace(re, "");
+            re = /xpcshell-child-process.ini:/gi;
+            line = line.replace(re, "");
+            re = /xpcshell-unpack.ini:/gi;
+            line = line.replace(re, "");
+
+            line = line.split(" | ");
+
+            for (var i=0; i < $scope.omittedLeads.length; i++) {
+                if (line[0].search($scope.omittedLeads[i]) >= 0 && line.length > 1) {
+                    line.shift();
+                }
+            }
+
+            return line;
+        };
+
         /**
          *  Pre-fill the form with information/metadata from the failure
          */
@@ -48,11 +78,8 @@ treeherder.controller('BugFilerCtrl', [
             }
 
             for (var i = 0; i < allFailures.length; i++) {
-                for (var j=0; j < $scope.omittedLeads.length; j++) {
-                    if (allFailures[i][0].search($scope.omittedLeads[j]) >= 0 && allFailures[i].length > 1) {
-                        allFailures[i].shift();
-                    }
-                }
+                console.log(allFailures[i]);
+                allFailures[i] = cleanLine(allFailures[i]);
                 if (i !== 0) {
                     thisFailure += "\n";
                 }
@@ -72,31 +99,7 @@ treeherder.controller('BugFilerCtrl', [
          *  and try to find the failing test name from what's left
          */
         $scope.parseSummary = function(summary) {
-            // Strip out some extra stuff at the start of some failure paths
-            var re = /file:\/\/\/.*?\/build\/tests\/reftest\/tests\//gi;
-            summary = summary.replace(re, "");
-            re = /\/home\/worker\/workspace\/build\/src\//gi;
-            summary = summary.replace(re, "");
-            re = /chrome:\/\/mochitests\/content\/a11y\//gi;
-            summary = summary.replace(re, "");
-            re = /\/home\/worker\/checkouts\/gecko\//gi;
-            summary = summary.replace(re, "");
-            re = /http:\/\/([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+):([0-9]+)\/tests\//gi;
-            summary = summary.replace(re, "");
-            re = /jetpack-package\//gi;
-            summary = summary.replace(re, "");
-            re = /xpcshell-child-process.ini:/gi;
-            summary = summary.replace(re, "");
-            re = /xpcshell-unpack.ini:/gi;
-            summary = summary.replace(re, "");
-
-            summary = summary.split(" | ");
-
-            for (var i=0; i < $scope.omittedLeads.length; i++) {
-                if (summary[0].search($scope.omittedLeads[i]) >= 0 && summary.length > 1) {
-                    summary.shift();
-                }
-            }
+            summary = cleanLine(summary);
 
             $uibModalInstance.possibleFilename = summary[0].split("==")[0].split("/").pop().trim();
 

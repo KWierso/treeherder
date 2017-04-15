@@ -177,7 +177,7 @@ treeherder.controller('ThClassificationOptionController', [
                     parsedLog: () => location.origin + "/" + thUrl.getLogViewerUrl(ctrl.thJob.id),
                     reftest: () => thReftestStatus(ctrl.thJob) ? reftestUrlRoot + logUrl + "&only_show_unexpected=1" : "",
                     selectedJob:() => ctrl.thJob,
-                    allFailures: () => [ctrl.errorLine.data.bug_suggestions.search.split(" | ")],
+                    allFailures: () => [ctrl.errorLine.data.bug_suggestions.search],
                     crashSignatures: () => crashSignatures,
                     successCallback: () => (data) => {
                         var bugId = data.success;
