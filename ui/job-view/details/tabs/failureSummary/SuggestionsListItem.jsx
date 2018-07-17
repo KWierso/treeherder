@@ -21,7 +21,7 @@ export default class SuggestionsListItem extends React.Component {
 
   render() {
     const {
-      suggestion, selectedJob, toggleBugFiler, addBug,
+      suggestion, selectedJob, toggleBugFiler, toggleBugFiler2, addBug,
     } = this.props;
     const { suggestionShowMore } = this.state;
 
@@ -32,6 +32,13 @@ export default class SuggestionsListItem extends React.Component {
             className="btn btn-xs btn-light-bordered link-style"
             onClick={() => toggleBugFiler(suggestion)}
             title="file a bug for this failure"
+          >
+            <i className="fa fa-bug" />
+          </span>
+          <span
+            className="btn btn-xs btn-light-bordered link-style"
+            onClick={() => toggleBugFiler2(suggestion)}
+            title="file a new bug for this failure"
           >
             <i className="fa fa-bug" />
           </span>
@@ -88,4 +95,5 @@ SuggestionsListItem.propTypes = {
   selectedJob: PropTypes.object.isRequired,
   addBug: PropTypes.func.isRequired,
   toggleBugFiler: PropTypes.func.isRequired,
+  toggleBugFiler2: PropTypes.func.isRequired,
 };
