@@ -10,6 +10,7 @@ export default class SuggestionsListItem extends React.Component {
     super(props);
     this.state = {
       suggestionShowMore: false,
+      summaryLength: 0,
     };
 
     this.clickShowMore = this.clickShowMore.bind(this);

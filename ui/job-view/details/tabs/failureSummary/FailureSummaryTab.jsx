@@ -26,6 +26,15 @@ export default class FailureSummaryTab extends React.Component {
     this.$timeout = $injector.get('$timeout');
     this.$uibModal = $injector.get('$uibModal');
     this.$rootScope = $injector.get('$rootScope');
+    this.modalRef = React.createRef();
+  }
+
+  handleOpenModal() {
+    this.setState({ showModal: true });
+  }
+
+  handleCloseModal() {
+    this.setState({ showModal: false });
   }
 
   fileBug(suggestion) {
@@ -69,8 +78,26 @@ export default class FailureSummaryTab extends React.Component {
     });
   }
 
-  fileBug2() {
-    this.setState({ showModal: true });
+  fileBug2(suggestion) {
+    const { suggestions, jobLogUrls, logViewerFullUrl, selectedJob, reftestUrl } = this.props;
+    const summary = suggestion.search;
+    const crashRegex = /application crashed \[@ (.+)\]$/g;
+    const crash = summary.match(crashRegex);
+    const crashSignatures = crash ? [crash[0].split('application crashed ')[1]] : [];
+    const allFailures = suggestions.map(sugg => (sugg.search.split(' | ')));
+    this.setState({
+      showModal: true,
+      failureDetails: {
+        summary: summary,
+        search_terms: suggestion.search_terms,
+        fullLog: jobLogUrls[0].url,
+        parsedLog: logViewerFullUrl,
+        reftest: isReftest(selectedJob) ? reftestUrl : '',
+        selectedJob: selectedJob,
+        allFailures: allFailures,
+        crashSignatures: crashSignatures.join('\n'),
+      } },
+    );
   }
 
   render() {
@@ -95,7 +122,7 @@ export default class FailureSummaryTab extends React.Component {
               addBug={addBug}
             />))}
 
-          <BugModal showModal={false} />
+          <BugModal showModal={this.state.showModal} failureDetails={this.state.failureDetails} ref={this.modalRef} />
 
           {!!errors.length &&
             <ErrorsList errors={errors} />}
