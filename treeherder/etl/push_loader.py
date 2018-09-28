@@ -250,10 +250,12 @@ class HgPushTransformer(object):
                 "revision": commit["node"],
                 "author": commit["author"],
                 "comment": commit["desc"],
+                "branch": commit["branch"],
             })
 
         return {
             "revision": commits[-1]["revision"],
+            "branch": commits[-1]["branch"],
             "author": push["user"],
             "push_timestamp": push["date"],
             "revisions": commits,

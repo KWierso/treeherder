@@ -45,6 +45,7 @@ class HgPushlogProcess(object):
 
         return {
             'revision': commits[-1]["revision"],
+            'branch': commits[-1]["branch"],
             'author': push['user'],
             'push_timestamp': push['date'],
             'revisions': commits,

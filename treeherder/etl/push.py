@@ -26,6 +26,7 @@ def store_push(repository, push_dict):
         for revision in push_dict['revisions']:
             Commit.objects.update_or_create(
                 push=push,
+                branch=revision['branch'],
                 revision=revision['revision'],
                 defaults={
                     'author': revision['author'],
