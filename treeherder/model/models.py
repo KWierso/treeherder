@@ -132,6 +132,7 @@ class Push(models.Model):
     the changesets that were part of the push
     '''
     repository = models.ForeignKey(Repository, on_delete=models.CASCADE)
+    branch = models.CharField(max_length=150)
     revision = models.CharField(max_length=40)
     author = models.CharField(max_length=150)
     time = models.DateTimeField(db_index=True)
@@ -176,6 +177,7 @@ class Commit(models.Model):
     A single commit in a push
     '''
     push = models.ForeignKey(Push, on_delete=models.CASCADE, related_name='commits')
+    branch = models.CharField(max_length=150)
     revision = models.CharField(max_length=40)
     author = models.CharField(max_length=150)
     comments = models.TextField()

@@ -39,6 +39,7 @@ class HgPushlogProcess(object):
         for commit in push['changesets'][-200:]:
             commits.append({
                 'revision': commit['node'],
+                'branch': commit['branch'],
                 'author': commit['author'],
                 'comment': commit['desc'],
             })

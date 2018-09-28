@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 def store_push(repository, push_dict):
     push_revision = push_dict.get('revision')
+    push_branch = push_dict.get('branch')
     if not push_dict.get('revision'):
         raise ValueError("Push must have a revision "
                          "associated with it!")
@@ -18,8 +19,10 @@ def store_push(repository, push_dict):
         push, _ = Push.objects.update_or_create(
             repository=repository,
             revision=push_revision,
+            branch=push_branch,
             defaults={
                 'author': push_dict['author'],
+                'branch': push_branch,
                 'time': datetime.utcfromtimestamp(
                     push_dict['push_timestamp'])
             })
