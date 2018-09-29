@@ -148,8 +148,10 @@ class KeyboardShortcuts extends React.Component {
    */
 
   // enter a quick filter
-  quickFilter() {
-    document.getElementById('quick-filter').focus();
+  quickFilter(e) {
+    if (!e.altKey) {
+      document.getElementById('quick-filter').focus();
+    }
   }
 
   // clear the quick filter field
