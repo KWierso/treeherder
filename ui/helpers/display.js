@@ -29,7 +29,7 @@ export const getSearchWords = function getHighlighterArray(text) {
   const tokens = text.split(/[^a-zA-Z0-9_-]+/);
 
   return tokens.reduce(
-    (acc, token) => (token.length > 1 ? [...acc, token] : acc),
+    (acc, token) => (token.length > 1 || (token.length === 1 && /[0-9]/.test(token)) ? [...acc, token] : acc),
     [],
   );
 };
