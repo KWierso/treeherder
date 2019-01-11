@@ -418,6 +418,7 @@ export class BugFilerClass extends React.Component {
           component,
           summary,
           keywords,
+          op_sys: product === 'GeckoView' ? 'All' : '',
           version: version.name,
           blocks,
           depends_on: dependsOn,
