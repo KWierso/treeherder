@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Button } from 'reactstrap';
 import $ from 'jquery';
+import isEqual from 'lodash/isEqual';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChartBar } from '@fortawesome/free-regular-svg-icons';
 import {
@@ -33,6 +34,9 @@ class ActionBar extends React.PureComponent {
     this.state = {
       customJobActionsShowing: false,
       timesModal: false,
+      timeoutJobIds: [],
+      timeoutJobs: [],
+      timeoutCount: 0,
     };
 
     this.toggleTimes = this.toggleTimes.bind(this);
@@ -46,6 +50,14 @@ class ActionBar extends React.PureComponent {
   componentWillUnmount() {
     window.removeEventListener(thEvents.openLogviewer, this.onOpenLogviewer);
     window.removeEventListener(thEvents.jobRetrigger, this.onRetriggerJob);
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.timeoutId !== this.state.timeoutId) {
+      // If a batch-retrigger timer was already running,
+      // replace it with the new one, thus resetting the timeout
+      clearTimeout(prevState.timeoutId);
+    }
   }
 
   toggleTimes = jobs => {
@@ -139,17 +151,54 @@ class ActionBar extends React.PureComponent {
     if (shiftKey) {
       this.toggleTimes(jobs);
     } else {
-      // Spin the retrigger button when retriggers happen
+      if (isEqual(jobs, this.state.timeoutJobs) || this.state.timeoutCount == 0) {
+        // This is either the first retrigger request or an extra one on the
+        // previous array of jobs. Just add one to the request count and move on.
+        this.setState((prevState) => ({
+          timeoutCount: prevState.timeoutCount + 1,
+        }));
+      } else {
+        // The array of jobs has changed. Immediately clear the timeout and
+        // process the previous array of jobs' request before moving on.
+        clearTimeout(this.state.timeoutId);
+        this.timedRetrigger();
+        this.retriggerJob(jobs, false);
+      }
+
+      // Set the timeout
+      this.setState((prevState) => ({
+        timeoutId: setTimeout(this.timedRetrigger, 5000), // TODO: 5 seconds too long?
+        timeoutJobs: jobs,
+      }));
+
+      // Spin the retrigger button and notify to give some feedback
       $('#retrigger-btn > svg').removeClass('action-bar-spin');
       window.requestAnimationFrame(() => {
         window.requestAnimationFrame(() => {
           $('#retrigger-btn > svg').addClass('action-bar-spin');
         });
       });
-
-      JobModel.retrigger(jobs, repoName, notify);
+      notify('Job added to retrigger list', 'info');
     }
   };
+
+  timedRetrigger = () => {
+    const { repoName, notify } = this.props;
+
+    // Spin the retrigger button when retriggers happen
+    $('#retrigger-btn > svg').removeClass('action-bar-spin');
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        $('#retrigger-btn > svg').addClass('action-bar-spin');
+      });
+    });
+
+    // Do the retrigger with the desired number of times
+    JobModel.retrigger(this.state.timeoutJobs, repoName, notify, this.state.timeoutCount);
+
+    // Reset the count back to zero for future retriggers
+    this.setState({timeoutCount: 0});
+  }
 
   backfillJob = () => {
     const { user, selectedJob, getGeckoDecisionTaskId, notify } = this.props;
