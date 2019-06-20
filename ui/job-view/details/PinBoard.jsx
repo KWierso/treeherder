@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { Button, FormGroup, Input, FormFeedback } from 'reactstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlusSquare, faTimes } from '@fortawesome/free-solid-svg-icons';
+import isEqual from 'lodash/isEqual';
 
 import { thEvents } from '../../helpers/constants';
 import { formatModelError } from '../../helpers/errorMessage';
@@ -32,6 +33,9 @@ class PinBoard extends React.Component {
       enteringBugNumber: false,
       newBugNumber: null,
       timesModal: false,
+      timeoutJobIds: [],
+      timeoutJobs: [],
+      timeoutCount: 0,
     };
 
     this.toggleTimes = this.toggleTimes.bind(this);
@@ -43,6 +47,14 @@ class PinBoard extends React.Component {
 
   componentWillUnmount() {
     window.removeEventListener(thEvents.saveClassification, this.save);
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.timeoutId !== this.state.timeoutId) {
+      // If a batch-retrigger timer was already running,
+      // replace it with the new one, thus resetting the timeout
+      clearTimeout(prevState.timeoutId);
+    }
   }
 
   toggleTimes = jobs => {
@@ -367,9 +379,43 @@ class PinBoard extends React.Component {
     if (shiftKey) {
       this.toggleTimes(Object.values(pinnedJobs));
     } else {
+      if (isEqual(Object.values(pinnedJobs), this.state.timeoutJobs) || this.state.timeoutCount == 0) {
+        // This is either the first retrigger request or an extra one on the
+        // previous array of jobs. Just add one to the request count and move on.
+        this.setState((prevState) => ({
+          timeoutCount: prevState.timeoutCount + 1,
+        }));
+      } else {
+        // The array of jobs has changed. Immediately clear the timeout and
+        // process the previous array of jobs' request before moving on.
+        clearTimeout(this.state.timeoutId);
+        this.timedRetrigger();
+        this.setState({
+            timeoutCount: 0
+        }, () => {
+            this.retriggerAllPinnedJobs(false);
+        });
+      }
+
+      // Set the timeout
+      this.setState((prevState) => ({
+        timeoutId: setTimeout(this.timedRetrigger, 10000), // TODO: 10 seconds too long?
+        timeoutJobs: Object.values(pinnedJobs),
+      }));
       JobModel.retrigger(Object.values(pinnedJobs), repoName, notify);
+      notify('Pinboard added to retrigger list', 'info');
     }
   };
+
+  timedRetrigger = () => {
+    const { repoName, notify } = this.props;
+
+    // Do the retrigger with the desired number of times
+    JobModel.retrigger(this.state.timeoutJobs, repoName, notify, this.state.timeoutCount);
+
+    // Reset the count back to zero for future retriggers
+    this.setState({timeoutCount: 0});
+  }
 
   render() {
     const {
